@@ -40,14 +40,14 @@ function ExpectClauseHolder() {
                 expectClause.matchFn = () => {
                     clearTimeout(expectClause.timeoutFnRef);
                     matchFn();
-                    resolve();
+                    resolve(true);
                 }
 
                 // Wrap timeout function with resolve for promises
                 let timeoutFn = expectClause.timeoutFn;
                 expectClause.timeoutFn = () => {
                     timeoutFn();
-                    resolve();
+                    resolve(false);
                 }
 
                 expectClause.timeoutFnRef = setTimeout(() => {
@@ -120,6 +120,14 @@ function ExpectClause(...args) {
     this.matchFn = matchFn;
     this.timeout = timeout;
     this.timeoutFn = timeoutFn;
+
+    console.log(`
+    Adding clause:
+    strings: ${strings.toString()}
+    matchFn: ${matchFn}
+    timeout: ${timeout}
+    timeoutFn: ${timeoutFn}
+    `)
 
     return this;
 }

@@ -2,7 +2,7 @@
   "name": "tspect",
   "version": "1.0.0",
   "description": "",
-  "main": "tspect.js",
+  "main": "src/tspect.js",
   "scripts": {
     "test": "jest --collectCoverage"
   },
