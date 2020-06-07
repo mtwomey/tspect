@@ -6,14 +6,14 @@ tspect.ExpectClause = tspect.__get__('ExpectClause');
 test('creating the pty process successfully', () => {
     let ptyProcess = tspect.spawn('/bin/echo', ['Hello World!']);
     expect(ptyProcess.constructor.name).toBe('UnixTerminal');
-    ptyProcess.die();
+    ptyProcess.done();
 })
 
 test('creating a pty process and reading data from it', () => {
     let ptyProcess = tspect.spawn('/bin/echo', ['Hello World!']);
     ptyProcess.on('data', data => {
         expect(data).toBe('Hello World!\r\n')
-        ptyProcess.die();
+        ptyProcess.done();
     });
 })
 
@@ -50,7 +50,8 @@ test('adding an expect clause with multiple matches to a pty process', (done) =>
             [
                 '$',
                 () => {
-                    ptyProcess.die();
+                    console.log('Wrapping up!');
+                    ptyProcess.done();
                     done();
                 },
                 () => {
@@ -70,22 +71,21 @@ test('adding an expect clause with multiple matches to a pty process', (done) =>
 test('adding multiple expect clauses at once', (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     let clause1 = ['$', () => {}];
-    let clause2 = ['$', () => {ptyProcess.die(); done();}];
+    let clause2 = ['$', () => {ptyProcess.done(); done();}];
     ptyProcess.expect(clause1, clause2, clause1);
-    ptyProcess.end();
 })
 
 test('adding multiple expect clauses at once - array form', (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     let clause1 = ['$', () => {}];
-    let clause2 = ['$', () => {ptyProcess.die(); done();}];
+    let clause2 = ['$', () => {ptyProcess.done(); done();}];
     ptyProcess.expect([clause1, clause2, clause1]);
 })
 
 test('adding an expect clause with a single match to a pty process - array form', (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     ptyProcess.expect(['$', () => {
-        ptyProcess.die();
+        ptyProcess.done();
         done()
     }]);
 });
@@ -95,7 +95,7 @@ test('adding an expect clause with a single match to a pty process - object form
     ptyProcess.expect({
         strings: '$',
         matchFn: () => {
-            ptyProcess.die();
+            ptyProcess.done();
             done();
         }
     });
@@ -106,7 +106,7 @@ test('adding an expect clause with a single match to a pty process - object form
     ptyProcess.expect({
         strings: ['matchThis', 'or', '$'],
         matchFn: () => {
-            ptyProcess.die();
+            ptyProcess.done();
             done();
         }
     });
@@ -115,21 +115,21 @@ test('adding an expect clause with a single match to a pty process - object form
 test('creating an expect clause with just a string and nothing else (for await use)', async (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     await ptyProcess.expect('$');
-    ptyProcess.die();
+    ptyProcess.done();
     done();
 });
 
 test('creating an expect clause with just a string and timeout (for await use)', async (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     await ptyProcess.expect('$', 3000);
-    ptyProcess.die();
+    ptyProcess.done();
     done();
 });
 
 test('adding an expect clause with a single match to a pty process', (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     ptyProcess.expect('$', () => {
-        ptyProcess.die();
+        ptyProcess.done();
         done()
     });
 });
@@ -139,7 +139,7 @@ test('adding an expect clause that\'s not found and times out', (done) => {
     ptyProcess.expect('noMatch', () => {
 
     }, 2000, () => {
-        ptyProcess.die();
+        ptyProcess.done();
         done();
     });
 });
@@ -147,7 +147,7 @@ test('adding an expect clause that\'s not found and times out', (done) => {
 test('sending output to the spawned process 1', (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
     ptyProcess.expect('hello', () => {
-        ptyProcess.die();
+        ptyProcess.done();
         done();
     }, 1000);
     ptyProcess.expect('$', () => {
@@ -162,8 +162,7 @@ test('sending output to the spawned process 2', async (done) => {
     await ptyProcess.expect('hello', () => {
 
     }, 50, () => {
-        ptyProcess.die();
-        ptyProcess = undefined;
+        ptyProcess.done();
         done();
     });
     if (ptyProcess)

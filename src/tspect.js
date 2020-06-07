@@ -67,7 +67,7 @@ function ExpectClauseHolder() {
     return this;
 }
 
-function die(expectClauseHolder, ptyProcess) {
+function clearExpectClauseTimeouts(expectClauseHolder) {
     Object.values(expectClauseHolder.expectClauses).forEach(expectClause => {
         clearTimeout(expectClause.timeoutFnRef);
     })
@@ -102,7 +102,8 @@ function ExpectClause(...args) {
 
     if (typeof args[1] === 'function') {
         matchFn = args[1];
-    } else {
+    }
+    if (typeof args[1] === 'number') {
         timeout = args[1];
     }
 
@@ -144,59 +145,60 @@ function spawn(program, params) {
     let ptyConfig = new PtyConfig();
     Object.assign(ptyProcess, {
         expect: expectClauseHolder.add,
-        die: () => {
-            die(expectClauseHolder, ptyProcess)
+        done: () => {
+            clearExpectClauseTimeouts(expectClauseHolder);
+            ptyProcess.kill();
         },
         interact: () => {
-            return interact(ptyProcess, ptyConfig)
-        },
-        getExpectClauses: () => {return expectClauseHolder.expectClauses;}
+            return interact(ptyProcess, ptyConfig, expectClauseHolder);
+        }
     });
 
     let dataHolder = new DataHolder();
 
-    ptyProcess.on('data', (data) => {
+    ptyProcess.addListener('data', (data) => {
         processIncomingData(data, dataHolder, expectClauseHolder, ptyConfig);
     })
-    ptyProcess.on('err', (data) => {
+    ptyProcess.addListener('err', (data) => {
         processIncomingData(data, dataHolder, expectClauseHolder, ptyConfig);
     })
     return ptyProcess;
 }
 
-function interact(ptyProcess, ptyConfig) { // Allow user interaction from here on out
+function interact(ptyProcess, ptyConfig, expectClauseHolder) { // Allow user interaction from here on out
     return new Promise((resolve, reject) => {
         ptyConfig.echo = false;
 
         process.stdin.setRawMode(true);
 
-        let stdoutResizeHandler = () => {
+        function stdoutResizeHandler() {
             ptyProcess.resize(process.stdout.columns, process.stdout.rows);
-        };
-        process.stdout.on('resize', stdoutResizeHandler);
+        }
+        process.stdout.addListener('resize', stdoutResizeHandler);
 
-        let stdinDataHandler = data => {
+        function stdinDataHandler(data) {
             ptyProcess.write(data);
-        };
-        process.stdin.on('data', stdinDataHandler);
+        }
+        process.stdin.addListener('data', stdinDataHandler);
 
-        let ptyProcessDataHandler = data => {
+        function stdoutDataHandler(data) {
             process.stdout.write(data);
-        };
-        ptyProcess.on('data', ptyProcessDataHandler);
+        }
+        ptyProcess.addListener('data', stdoutDataHandler);
 
-        ptyProcess.on('close', function () {
+        ptyProcess.addListener('close', function () {
+            ptyProcess.removeListener('data', stdoutDataHandler);
+            process.stdin.removeListener('data', stdinDataHandler);
+            process.stdout.removeListener('resize', stdoutResizeHandler);
             process.stdin.setRawMode(false);
-            ptyProcess.removeAllListeners();
-            process.stdin.removeAllListeners();
-            process.stdout.removeAllListeners();
-
             ptyConfig.echo = true;
+            process.stdin.unref(); // This is the key to getting node to exit
+            // see here: https://stackoverflow.com/questions/26004519/why-doesnt-my-node-js-process-terminate-once-all-listeners-have-been-removed
+            // and here: https://stackoverflow.com/questions/59220095/node-doesnt-exit-automatically-once-a-listener-is-set-on-stdin
+            clearExpectClauseTimeouts(expectClauseHolder);
             resolve();
         });
-        ptyProcess.write('\n');
     });
-
 }
 
 function processIncomingData(data, dataHold, expectClauseHolder, ptyConfig) {
