@@ -2,13 +2,22 @@
   "name": "tspect",
   "version": "1.0.0",
   "description": "",
-  "main": "tspect.js",
+  "main": "src/tspect.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --collectCoverage"
   },
   "author": "Matthew Twomey",
   "license": "MIT",
   "dependencies": {
-    "node-pty": "^0.9.0"
+    "jest": "^26.0.1",
+    "node-pty": "^0.9.0",
+    "rewire": "^5.0.0",
+    "why-is-node-running": "^2.1.2"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ]
   }
 }
