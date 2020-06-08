@@ -1,7 +1,7 @@
 # tspect - remember expect?
 
 ## Installation
-`npm i mtwomey/tspect#v2.0.0 --save`
+`npm i mtwomey/tspect#v2.0.1 --save`
 
 This will install v2.0.0 direct from github. See Releases for the latest release #s.
 
