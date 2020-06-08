@@ -4,12 +4,16 @@ let crypto = require('crypto');
 
 function PtyConfig() {
     this.echo = true;
+    this.bufferSize = 5000;
 }
 
-function DataHolder() {
+function DataHolder(ptyConfig) {
     this.data = '';
+    this.ptyConfiig = ptyConfig;
     this.append = newData => {
         this.data += newData;
+        if (this.data.length > ptyConfig.bufferSize)
+            this.data = this.data.slice(this.data.length - ptyConfig.bufferSize);
     }
     return this;
 }
@@ -40,14 +44,14 @@ function ExpectClauseHolder() {
                 expectClause.matchFn = () => {
                     clearTimeout(expectClause.timeoutFnRef);
                     matchFn();
-                    resolve();
+                    resolve(true);
                 }
 
                 // Wrap timeout function with resolve for promises
                 let timeoutFn = expectClause.timeoutFn;
                 expectClause.timeoutFn = () => {
                     timeoutFn();
-                    resolve();
+                    resolve(false);
                 }
 
                 expectClause.timeoutFnRef = setTimeout(() => {
@@ -124,14 +128,16 @@ function ExpectClause(...args) {
     return this;
 }
 
-function spawn(program, params) {
-    process.stdout.columns = 80;
-    process.stdout.rows = 20;
+function spawn(program) {
+    let params = program.split(' ');
+    program = params.shift();
     let commandLine = program;
     if (params)
-        commandLine += params.join('');
+        commandLine += ' ' + params.join('');
     process.stdout.write(commandLine + '\n');
 
+    process.stdout.columns = process.stdout.columns || 80;
+    process.stdout.rows = process.stdout.rows || 25;
     let ptyProcess = pty.spawn(program, params, {
         name: 'xterm-color',
         cols: process.stdout.columns,
@@ -151,10 +157,14 @@ function spawn(program, params) {
         },
         interact: () => {
             return interact(ptyProcess, ptyConfig, expectClauseHolder);
+        },
+        removeAllClauses: () => {
+            clearExpectClauseTimeouts(expectClauseHolder);
+            expectClauseHolder.expectClauses = {};
         }
     });
 
-    let dataHolder = new DataHolder();
+    let dataHolder = new DataHolder(ptyConfig);
 
     ptyProcess.addListener('data', (data) => {
         processIncomingData(data, dataHolder, expectClauseHolder, ptyConfig);
@@ -203,7 +213,7 @@ function interact(ptyProcess, ptyConfig, expectClauseHolder) { // Allow user int
 
 function processIncomingData(data, dataHold, expectClauseHolder, ptyConfig) {
     if (ptyConfig.echo)
-        process.stdout.write(data);
+        process.stdout.writeut -(data);
     dataHold.append(data);
     if (expectClauseHolder) {
         Object.values(expectClauseHolder.expectClauses).forEach(expectClause => {
