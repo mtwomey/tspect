@@ -213,7 +213,7 @@ function interact(ptyProcess, ptyConfig, expectClauseHolder) { // Allow user int
 
 function processIncomingData(data, dataHold, expectClauseHolder, ptyConfig) {
     if (ptyConfig.echo)
-        process.stdout.writeut -(data);
+        process.stdout.write(data);
     dataHold.append(data);
     if (expectClauseHolder) {
         Object.values(expectClauseHolder.expectClauses).forEach(expectClause => {
