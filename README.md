@@ -33,12 +33,42 @@ async function main() {
     }, 2000);
 }
 ```
+
+## SSH Login Example
+```javascript
+let tspect = require('../tspect');
+
+main()
+
+async function main() {
+    console.log('Starting session 1');
+    let pty = tspect.spawn('/usr/bin/ssh user@target.host');
+    pty.expect('The authenticity of host', // Answer yes in case you've never connected to this host before
+        () => {
+            pty.write('yes\n');
+        });
+    pty.expect('assword',
+        () => {
+            pty.removeAllClauses(); // Prevent the above clause from firing or timing out
+            pty.write('mypassword\n');
+        });
+    await pty.interact(pty); // Turn over control to the user
+}
+```
 ## tspect.spawn(program)
 
 * **program** Program to execute
 * Return the virtual pty
 
-## tspect.pty.expect(strings[,matchFn][,timeout][,timeoutFn])
+## pty.expect(strings[,matchFn][,timeout][,timeoutFn])
+
+* **strings** A single string or an array of strings to be matched from the pty input / output
+* **matchFn** Function executed upon a match
+* **timeout** Timeout in ms to wait
+* **timeoutFn** Function executed upon timeout
+* Returns a promise
+
+## pty.expect({strings: strings [,matchFn: matchFn][,timeout: timeout][,timeoutFn: timeoutFn}])
 
 * **strings** A single string or an array of strings to be matched from the pty output
 * **matchFn** Function executed upon a match
@@ -46,15 +76,7 @@ async function main() {
 * **timeoutFn** Function executed upon timeout
 * Returns a promise
 
-## tspect.pty.expect({strings: strings [,matchFn: matchFn][,timeout: timeout][,timeoutFn: timeoutFn}])
-
-* **strings** A single string or an array of strings to be matched from the pty output
-* **matchFn** Function executed upon a match
-* **timeout** Timeout in ms to wait
-* **timeoutFn** Function executed upon timeout
-* Returns a promise
-
-## tspect.pty.interact()
+## pty.interact()
 
 Connects your pty to the spawned virtual pty, allows for interactions.
 
@@ -72,3 +94,9 @@ async function main() {
     await pty.interact(); // Program terminates when you exit the shell
 }
 ```
+
+## pty.removeAllClauses()
+
+Removes all unresolved clauses from the session
+(clauses that have already resolved are automatically removed).
+

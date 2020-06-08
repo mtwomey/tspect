@@ -155,6 +155,20 @@ test('sending output to the spawned process 1', (done) => {
     }, 3000);
 });
 
+// test('that there isn\'t a match on input', (done) => {
+//     let ptyProcess = tspect.spawn('/bin/sh');
+//     ptyProcess.expect('hello', () => {
+//         let x = 10;
+//
+//     }, 1000, () => {
+//         ptyProcess.done();
+//         done();
+//     });
+//     ptyProcess.expect('$', () => {
+//         ptyProcess.write('touch hello\n');
+//     }, 3000);
+// });
+
 test('sending output to the spawned process 2', async (done) => {
     let ptyProcess = tspect.spawn('/bin/sh');
 
@@ -172,74 +186,78 @@ test('sending output to the spawned process 2', async (done) => {
 
 });
 
-test('expectClause creation 1', () => {
-    let expectClause = new tspect.ExpectClause('matchMe', ()=>{return});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(4000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
+describe('Expect Clause Creation', () => {
+    test('expectClause creation 1', () => {
+        let expectClause = new tspect.ExpectClause('matchMe', ()=>{return});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(4000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 2', () => {
+        let expectClause = new tspect.ExpectClause(['matchMe', 'or me'], ()=>{return});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(4000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 3', () => {
+        let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, 3000);
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 4', () => {
+        let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, () => {return -1});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(4000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 5', () => {
+        let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, 3000, () => {return -1});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 6', () => {
+        let expectClause = new tspect.ExpectClause(['matchMe', ()=>{return}, 3000, () => {return -1}]);
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 7', () => {
+        let expectClause = new tspect.ExpectClause({strings: 'matchMe', matchfn: () => {}, timeout: 3000});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 8', () => {
+        let expectClause = new tspect.ExpectClause({strings: ['matchMe', 'orMe'], matchfn: () => {}, timeout: 3000});
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
+
+    test('expectClause creation 9', () => {
+        let expectClause = new tspect.ExpectClause('matchMe', 3000);
+        expect(Array.isArray(expectClause.strings)).toBe(true);
+        expect(typeof expectClause.matchFn).toBe('function');
+        expect(expectClause.timeout).toBe(3000);
+        expect(typeof expectClause.timeoutFn).toBe('function');
+    })
 })
 
-test('expectClause creation 2', () => {
-    let expectClause = new tspect.ExpectClause(['matchMe', 'or me'], ()=>{return});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(4000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
 
-test('expectClause creation 3', () => {
-    let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, 3000);
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 4', () => {
-    let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, () => {return -1});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(4000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 5', () => {
-    let expectClause = new tspect.ExpectClause('matchMe', ()=>{return}, 3000, () => {return -1});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 6', () => {
-    let expectClause = new tspect.ExpectClause(['matchMe', ()=>{return}, 3000, () => {return -1}]);
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 7', () => {
-    let expectClause = new tspect.ExpectClause({strings: 'matchMe', matchfn: () => {}, timeout: 3000});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 8', () => {
-    let expectClause = new tspect.ExpectClause({strings: ['matchMe', 'orMe'], matchfn: () => {}, timeout: 3000});
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
-
-test('expectClause creation 9', () => {
-    let expectClause = new tspect.ExpectClause('matchMe', 3000);
-    expect(Array.isArray(expectClause.strings)).toBe(true);
-    expect(typeof expectClause.matchFn).toBe('function');
-    expect(expectClause.timeout).toBe(3000);
-    expect(typeof expectClause.timeoutFn).toBe('function');
-})
